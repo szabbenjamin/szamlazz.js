@@ -14,16 +14,16 @@
   "author": "Elastic Wings Ltd.",
   "license": "MIT",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^5.2.0",
-    "mockery": "^1.7.0",
-    "sinon": "^1.17.4"
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
+    "mockery": "^2.1.0",
+    "sinon": "^9.2.1"
   },
   "dependencies": {
     "esnextguardian": "^1.2.1",
-    "libxmljs2": "^0.21.6",
-    "merge": "^1.2.0",
-    "request": "^2.73.0",
-    "xml2js": "^0.4.16"
+    "libxmljs2": "^0.26.5",
+    "merge": "^2.1.0",
+    "request": "^2.88.2",
+    "xml2js": "^0.4.23"
   }
 }
