@@ -1,35 +1,46 @@
 'use strict'
 
 class Currency {
-  constructor (value, roundPriceExp, comment) {
+  constructor(value, roundPriceExp, comment) {
     this.value = value
     this.comment = comment
     this.roundPriceExp = roundPriceExp
   }
 
-  toString () {
+  toString() {
     return this.value + '(' + this.comment + ')'
   }
 }
 
 class Language {
-  constructor (value, name) {
+  constructor(value, name) {
     this.value = value
     this.name = name
   }
 
-  toString () {
+  toString() {
     return this.name + '(' + this.value + ')'
   }
 }
 
 class PaymentMethod {
-  constructor (value, comment) {
+  constructor(value, comment) {
     this.value = value
     this.comment = comment
   }
 
-  toString () {
+  toString() {
+    return this.value + '(' + this.comment + ')'
+  }
+}
+
+class ResponseVersion {
+  constructor(value, comment) {
+    this.value = value
+    this.comment = comment
+  }
+
+  toString() {
     return this.value + '(' + this.comment + ')'
   }
 }
@@ -83,7 +94,12 @@ exports.setup = function (_module) {
     PayPal: new PaymentMethod('PayPal', 'PayPal')
   }
 
-  _module.Interface = { Currency, Language, PaymentMethod }
+  _module.ResponseVersion = {
+    PlainTextOrPdf: new ResponseVersion(1, 'gives a simple text or PDF as answer'),
+    Xml: new ResponseVersion(2, 'xml answer, in case you asked for the PDF as well it will be included in the XML with base64 coding')
+  }
+
+  _module.Interface = { Currency, Language, PaymentMethod, ResponseVersion }
 
   return _module
 }

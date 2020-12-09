@@ -4,7 +4,7 @@ const xml2js = require('xml2js')
 
 const padStr = '  '
 
-function pad (num, str) {
+function pad(num, str) {
   str = str || padStr
 
   let o = ''
@@ -22,17 +22,17 @@ exports.pad = pad
 
 const xmlSubstChars = { '<': '&lt;', '>': '&gt;', '&': '&amp;' }
 const xmlSubstRegexp = /[<>&]/g
-const replaceXMLChar = chr => xmlSubstChars[ chr ]
+const replaceXMLChar = (chr) => xmlSubstChars[chr]
 
-function escapeXMLString (str) {
+function escapeXMLString(str) {
   return str.replace(xmlSubstRegexp, replaceXMLChar)
 }
 
-function wrapWithElement (name, data, indentLevel) {
+function wrapWithElement(name, data, indentLevel) {
   indentLevel = indentLevel || Number(data) || 0
 
   if (Array.isArray(name)) {
-    return name.map(item => wrapWithElement(item[ 0 ], item[ 1 ], indentLevel + 1)).join('')
+    return name.map((item) => wrapWithElement(item[0], item[1], indentLevel + 1)).join('')
   }
 
   let o = ''
@@ -64,35 +64,30 @@ function wrapWithElement (name, data, indentLevel) {
 
 exports.wrapWithElement = wrapWithElement
 
-function xml2obj (xml, objList, cb) {
-  xml2js.parseString(xml, (e, res) => {
-    if (e) {
-      return cb(e)
+async function xml2obj(xml, objList) {
+  const xmlObj = await xml2js.parseStringPromise(xml)
+  const o = {}
+  Object.keys(objList).forEach((keyPath) => {
+    const path = keyPath.split('.')
+
+    let found = true
+    let p = xmlObj
+
+    for (let i = 0; i < path.length; i++) {
+      if (p.hasOwnProperty(path[i])) {
+        console.log('>>', path[i])
+        p = p[path[i]]
+      } else {
+        found = false
+        break
+      }
     }
 
-    const o = {}
-    Object.keys(objList).forEach(keyPath => {
-      const path = keyPath.split('.')
-
-      let found = true
-      let p = res
-
-      for (let i = 0; i < path.length; i++) {
-        if (p.hasOwnProperty(path[ i ])) {
-          console.log('>>', path[ i ])
-          p = p[ path[ i ] ]
-        } else {
-          found = false
-          break
-        }
-      }
-
-      if (found) {
-        o[ objList[ keyPath ] ] = p[ 0 ]
-      }
-    })
-
-    cb(null, o)
+    if (found) {
+      o[objList[keyPath]] = p[0]
+    }
   })
+  return o
 }
+
 exports.xml2obj = xml2obj
