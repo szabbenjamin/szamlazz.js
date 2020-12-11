@@ -8,20 +8,13 @@ const axios = require('axios')
 const FormData = require('form-data')
 const Constants = require('./Constants').setup()
 
-const xmlHeader =
-  '<?xml version="1.0" encoding="UTF-8"?>\n' +
-  '<xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-  'xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla xmlszamla.xsd">\n'
-
-const xmlFooter = '</xmlszamla>'
-
 const szamlazzURL = 'https://www.szamlazz.hu/szamla/'
 
 const defaultOptions = {
   eInvoice: false,
   requestInvoiceDownload: false,
   downloadedInvoiceCount: 1,
-  responseVersion: Constants.ResponseVersion.PlainTextOrPdf
+  responseVersion: Constants.ResponseVersion.PlainTextOrPdf.value
 }
 
 class Client {
@@ -42,7 +35,7 @@ class Client {
   }
 
   // TODO: test this
-  async getInvoiceData(options) {
+  getInvoiceData(options) {
     const hasinvoiceId = typeof options.invoiceId === 'string' && options.invoiceId.trim().length > 1
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
     assert.ok(hasinvoiceId || hasOrderNumber, 'Either invoiceId or orderNumber must be specified')
@@ -58,11 +51,14 @@ class Client {
       ]) +
       '</xmlszamlaxml>'
 
-    return _sendRequest({ client: this, fileFieldName: 'action-szamla_agent_xml', xml, pdfInResponse: false, xmlResponse: true }).then(
-      (xmlObj) => {
-        return xmlObj.szamla
-      }
-    )
+    return _sendRequest({
+      client: this,
+      fileFieldName: 'action-szamla_agent_xml',
+      xml,
+      rootElementName: 'szamla',
+      pdfInResponse: false,
+      xmlResponse: true
+    })
   }
 
   // TODO: test this
@@ -89,7 +85,9 @@ class Client {
       client: this,
       fileFieldName: 'action-szamla_agent_st',
       xml,
-      pdfInResponse: this._options.requestInvoiceDownload
+      rootElementName: 'xmlszamlavalasz',
+      pdfInResponse: this._options.requestInvoiceDownload,
+      xmlResponse: this._options.responseVersion === Constants.ResponseVersion.Xml.value
     }).then(({ headers, pdf }) => {
       const result = {
         invoiceId: headers.szlahu_szamlaszam,
@@ -100,12 +98,6 @@ class Client {
         return { ...result, pdf }
       }
       return result
-      // let pdf = null
-      // const contentType = httpResponse.headers['content-type']
-
-      // if (contentType && contentType.indexOf('application/pdf') === 0) {
-      //   pdf = httpResponse.body
-      // }
     })
   }
 
@@ -115,7 +107,9 @@ class Client {
       client: this,
       fileFieldName: 'action-xmlagentxmlfile',
       xml,
-      pdfInResponse: this._options.requestInvoiceDownload
+      rootElementName: 'xmlszamlavalasz',
+      pdfInResponse: this._options.requestInvoiceDownload,
+      xmlResponse: this._options.responseVersion === Constants.ResponseVersion.Xml.value
     }).then(({ headers, pdf }) => {
       const result = {
         invoiceId: headers.szlahu_szamlaszam,
@@ -133,8 +127,8 @@ class Client {
     this._options.requestInvoiceDownload = value
   }
 
-  setResponseVersion(value) {
-    this._options.responseVersion = value
+  setResponseVersion(responseVersion) {
+    this._options.responseVersion = responseVersion.value
   }
 
   _getAuthFields() {
@@ -153,6 +147,13 @@ class Client {
   }
 
   _generateInvoiceXML(invoice) {
+    const xmlHeader =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+      'xsi:schemaLocation="http://www.szamlazz.hu/xmlszamla xmlszamla.xsd">\n'
+
+    const xmlFooter = '</xmlszamla>'
+
     return (
       xmlHeader +
       XMLUtils.wrapWithElement(
@@ -171,11 +172,10 @@ class Client {
       xmlFooter
     )
   }
-
-  // TODO: create a more elaborate way to store the cookies
 }
 
-const _sendRequest = async ({ client, fileFieldName, xml, xmlResponse = false, pdfInResponse = false }) => {
+// TODO: create a more elaborate way to store the cookies
+const _sendRequest = async ({ client, fileFieldName, xml, rootElementName, xmlResponse = false, pdfInResponse = false }) => {
   const formData = new FormData()
   const options = {
     filename: 'request.xml',
@@ -183,9 +183,9 @@ const _sendRequest = async ({ client, fileFieldName, xml, xmlResponse = false, p
   }
   formData.append(fileFieldName, xml, options)
 
-  const headers = formData.getHeaders()
+  const requestHeaders = formData.getHeaders()
   if (!!client._cookie) {
-    headers.Cookie = client._cookie
+    requestHeaders.Cookie = client._cookie
   }
 
   let responseType = 'text'
@@ -193,10 +193,15 @@ const _sendRequest = async ({ client, fileFieldName, xml, xmlResponse = false, p
     responseType = 'arraybuffer'
   }
 
-  const httpResponse = await axios.post(szamlazzURL, formData, { headers, responseType })
+  // Start the Request
+  const httpResponse = await axios.post(szamlazzURL, formData, { headers: requestHeaders, responseType })
 
-  client._cookie = httpResponse.headers['set-cookie']
+  // Store the new cookie for later usage
+  if (!!httpResponse.headers['set-cookie']) {
+    client._cookie = httpResponse.headers['set-cookie']
+  }
 
+  // Check for errors
   if (httpResponse.status !== 200) {
     throw new Error(`${httpResponse.status} ${httpResponse.statusText}`)
   }
@@ -207,18 +212,29 @@ const _sendRequest = async ({ client, fileFieldName, xml, xmlResponse = false, p
     throw err
   }
 
-  if (pdfInResponse) {
-    if (xmlResponse) {
-      const parsed = await XMLUtils.xml2obj(httpResponse.data, { 'xmlszamlavalasz.pdf': 'pdf' })
-      return { ...httpResponse, pdf: Buffer.from(parsed.pdf, 'base64') }
-    } else {
-      return { ...httpResponse, pdf: httpResponse.data }
+  const headers = httpResponse.headers
+  let data = httpResponse.data
+  let pdf
+
+  // Process the response
+  if (xmlResponse) {
+    const { [rootElementName]: parsedXmlResponse } = await xml2js.parseStringPromise(httpResponse.data)
+
+    // Check for errors in the XML response
+    if (parsedXmlResponse.sikeres[0] === 'false' && !!parsedXmlResponse.hibakod[0]) {
+      const err = new Error(parsedXmlResponse.hibauzenet[0])
+      err['code'] = parsedXmlResponse.hibakod[0]
+      throw err
     }
-  } else if (xmlResponse) {
-    return await xml2js.parseStringPromise(httpResponse.data)
-  } else {
-    return httpResponse
+
+    data = parsedXmlResponse
+    pdf = !!parsedXmlResponse.pdf ? (pdf = Buffer.from(parsedXmlResponse.pdf[0], 'base64')) : undefined
+  } else if (pdfInResponse) {
+    // PLAIN text with PDF
+    data = undefined
+    pdf = httpResponse.data
   }
+  return { headers, data, pdf }
 }
 
 module.exports = Client

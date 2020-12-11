@@ -95,35 +95,69 @@ describe('Client', function () {
       })
     })
 
-    describe('the thrown error', function () {
-      beforeEach(function () {
-        requestStub.resolves({
-          status: 200,
-          headers: {
-            szlahu_error_code: '57',
-            szlahu_error: 'Some error message from the remote service'
-          }
+    describe('In case Szamlazz.hu returns an error', function () {
+      describe('The header contains the error codes', () => {
+        beforeEach(function () {
+          requestStub.resolves({
+            status: 200,
+            headers: {
+              szlahu_error_code: '57',
+              szlahu_error: 'Some error message from the remote service'
+            }
+          })
         })
+
+        it('should have error parameter', function () {
+          return client.issueInvoice(invoice).catch((err) => {
+            expect(err).to.be.a('error')
+          })
+        })
+
+        it('should have code property', function () {
+          return client.issueInvoice(invoice).catch((err) => {
+            expect(err).to.have.property('code', '57')
+          })
+        })
+
+        it('should have message property', function () {
+          return client.issueInvoice(invoice).catch((err) => {
+            expect(err).to.have.property('message', 'Some error message from the remote service')
+          })
+        })
+
+        it.skip('szlahu_down: true header', () => {})
       })
 
-      it('should have error parameter', function () {
-        return client.issueInvoice(invoice).catch((err) => {
-          expect(err).to.be.a('error')
-        })
-      })
+      describe('The XML contains the error codes', () => {
+        const errorXml = fs.readFileSync(path.join(__dirname, 'resources', 'issue_invoice_error.xml')).toString()
 
-      it('should have code property', function () {
-        return client.issueInvoice(invoice).catch((err) => {
-          expect(err).to.have.property('code', '57')
+        beforeEach(function () {
+          requestStub.resolves({
+            status: 200,
+            headers: {},
+            data: errorXml
+          })
+          client.setResponseVersion(Constants.ResponseVersion.Xml)
         })
-      })
 
-      it('should have message property', function () {
-        return client.issueInvoice(invoice).catch((err) => {
-          expect(err).to.have.property('message', 'Some error message from the remote service')
+        it('should have error parameter', function () {
+          return client.issueInvoice(invoice).catch((err) => {
+            expect(err).to.be.a('error')
+          })
+        })
+
+        it('should have code property', function () {
+          return client.issueInvoice(invoice).catch((err) => {
+            expect(err).to.have.property('code', '7')
+          })
+        })
+
+        it('should have message property', function () {
+          return client.issueInvoice(invoice).catch((err) => {
+            expect(err).to.have.property('message', 'Hiányzó adat: számla agent xml lekérés hiba (ismeretlen számlaszám).')
+          })
         })
       })
-      it('szlahu_down: true header', () => {})
     })
 
     describe('XML response', () => {
@@ -133,7 +167,7 @@ describe('Client', function () {
         szlahu_szamlaszam: '2020-139'
       }
 
-      describe('successful invoice generation without download request', function () {
+      describe('successful invoice generation without PDF download request', function () {
         beforeEach(function (done) {
           fs.readFile(path.join(__dirname, 'resources', 'success_without_pdf.xml'), function (e, data) {
             requestStub.resolves({
@@ -176,7 +210,7 @@ describe('Client', function () {
         })
       })
 
-      describe('successful invoice generation with download request', function () {
+      describe('successful invoice generation with PDF download request', function () {
         beforeEach(function (done) {
           fs.readFile(path.join(__dirname, 'resources', 'success_with_pdf.xml'), function (e, data) {
             requestStub.resolves({
@@ -212,7 +246,7 @@ describe('Client', function () {
         szlahu_szamlaszam: '2020-139'
       }
 
-      describe('successful invoice generation without download request', function () {
+      describe('successful invoice generation without PDF download request', function () {
         beforeEach(function () {
           requestStub.resolves({
             status: 200,
@@ -252,7 +286,7 @@ describe('Client', function () {
         })
       })
 
-      describe('successful invoice generation with download request', function () {
+      describe('successful invoice generation with PDF download request', function () {
         beforeEach(function (done) {
           fs.readFile(path.join(__dirname, 'resources', 'sample.pdf'), function (e, data) {
             requestStub.resolves({
@@ -261,21 +295,10 @@ describe('Client', function () {
               data
             })
 
-            client.setResponseVersion(Constants.ResponseVersion.Xml)
-            client.setRequestInvoiceDownload(false)
+            client.setResponseVersion(Constants.ResponseVersion.PlainTextOrPdf)
+            client.setRequestInvoiceDownload(true)
             done()
           })
-        })
-
-        beforeEach(function () {
-          requestStub.resolves({
-            status: 200,
-            headers: responseHeaders,
-            data: getPdfBuffer()
-          })
-
-          client.setResponseVersion(Constants.ResponseVersion.PlainTextOrPdf)
-          client.setRequestInvoiceDownload(true)
         })
 
         it('should have result parameter', function () {
