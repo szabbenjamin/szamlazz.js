@@ -57,7 +57,7 @@ class Client {
       xml,
       rootElementName: 'szamla',
       pdfInResponse: false,
-      xmlResponse: true
+      xmlResponse: true // Allways
     })
   }
 
@@ -88,17 +88,12 @@ class Client {
       rootElementName: 'xmlszamlavalasz',
       pdfInResponse: this._options.requestInvoiceDownload,
       xmlResponse: this._options.responseVersion === Constants.ResponseVersion.Xml.value
-    }).then(({ headers, pdf }) => {
-      const result = {
-        invoiceId: headers.szlahu_szamlaszam,
-        netTotal: headers.szlahu_nettovegosszeg,
-        grossTotal: headers.szlahu_bruttovegosszeg
-      }
-      if (!!pdf) {
-        return { ...result, pdf }
-      }
-      return result
-    })
+    }).then(({ headers, pdf }) => ({
+      invoiceId: headers.szlahu_szamlaszam,
+      netTotal: headers.szlahu_nettovegosszeg,
+      grossTotal: headers.szlahu_bruttovegosszeg,
+      pdf
+    }))
   }
 
   issueInvoice(invoice) {
@@ -110,16 +105,32 @@ class Client {
       rootElementName: 'xmlszamlavalasz',
       pdfInResponse: this._options.requestInvoiceDownload,
       xmlResponse: this._options.responseVersion === Constants.ResponseVersion.Xml.value
-    }).then(({ headers, pdf }) => {
-      const result = {
-        invoiceId: headers.szlahu_szamlaszam,
-        netTotal: headers.szlahu_nettovegosszeg,
-        grossTotal: headers.szlahu_bruttovegosszeg
+    }).then(({ headers, pdf }) => ({
+      invoiceId: headers.szlahu_szamlaszam,
+      netTotal: headers.szlahu_nettovegosszeg,
+      grossTotal: headers.szlahu_bruttovegosszeg,
+      pdf
+    }))
+  }
+
+  issueReceipt(receipt) {
+    const xml = this._generateReceiptXML(receipt)
+    return _sendRequest({
+      client: this,
+      fileFieldName: 'action-szamla_agent_nyugta_create',
+      xml,
+      rootElementName: 'xmlnyugtavalasz',
+      dataElementName: 'nyugta',
+      pdfElementName: 'nyugtaPdf',
+      pdfInResponse: this._options.requestReceiptDownload,
+      xmlResponse: true // Allways
+    }).then(({ data, pdf }) => {
+      return {
+        receiptId: data.alap[0].nyugtaszam[0],
+        netTotal: data.osszegek[0].totalossz[0].netto[0],
+        grossTotal: data.osszegek[0].totalossz[0].brutto[0],
+        pdf
       }
-      if (!!pdf) {
-        return { ...result, pdf }
-      }
-      return result
     })
   }
 
@@ -172,10 +183,35 @@ class Client {
       xmlFooter
     )
   }
+
+  _generateReceiptXML(receipt) {
+    const xmlHeader =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<xmlnyugtacreate xmlns="http://www.szamlazz.hu/xmlnyugtacreate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+      'xsi:schemaLocation="http://www.szamlazz.hu/xmlnyugtacreate http://www.szamlazz.hu/docs/xsds/nyugta/xmlnyugtacreate.xsd">\n'
+
+    const xmlFooter = '</xmlnyugtacreate>'
+
+    return (
+      xmlHeader +
+      XMLUtils.wrapWithElement('beallitasok', [...this._getAuthFields(), ['pdfLetoltes', this._options.requestInvoiceDownload]], 1) +
+      receipt._generateXML(1) +
+      xmlFooter
+    )
+  }
 }
 
 // TODO: create a more elaborate way to store the cookies
-const _sendRequest = async ({ client, fileFieldName, xml, rootElementName, xmlResponse = false, pdfInResponse = false }) => {
+const _sendRequest = async ({
+  client,
+  fileFieldName,
+  xml,
+  rootElementName,
+  dataElementName = null,
+  pdfElementName = 'pdf',
+  xmlResponse = false,
+  pdfInResponse = false
+}) => {
   const formData = new FormData()
   const options = {
     filename: 'request.xml',
@@ -221,14 +257,21 @@ const _sendRequest = async ({ client, fileFieldName, xml, rootElementName, xmlRe
     const { [rootElementName]: parsedXmlResponse } = await xml2js.parseStringPromise(httpResponse.data)
 
     // Check for errors in the XML response
-    if (parsedXmlResponse.sikeres[0] === 'false' && !!parsedXmlResponse.hibakod[0]) {
+    if (!!parsedXmlResponse.sikeres && parsedXmlResponse.sikeres[0] === 'false' && !!parsedXmlResponse.hibakod) {
       const err = new Error(parsedXmlResponse.hibauzenet[0])
       err['code'] = parsedXmlResponse.hibakod[0]
       throw err
     }
 
-    data = parsedXmlResponse
-    pdf = !!parsedXmlResponse.pdf ? (pdf = Buffer.from(parsedXmlResponse.pdf[0], 'base64')) : undefined
+    if (!!dataElementName && !!parsedXmlResponse[dataElementName]) {
+      data = parsedXmlResponse[dataElementName][0]
+    } else {
+      data = parsedXmlResponse
+    }
+
+    if (!!pdfElementName && !!parsedXmlResponse[pdfElementName]) {
+      pdf = Buffer.from(parsedXmlResponse[pdfElementName][0], 'base64')
+    }
   } else if (pdfInResponse) {
     // PLAIN text with PDF
     data = undefined

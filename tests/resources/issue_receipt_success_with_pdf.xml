@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmlnyugtavalasz xmlns="http://www.szamlazz.hu/xmlnyugtavalasz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlnyugtavalasz https://www.szamlazz.hu/szamla/docs/xsds/nyugtavalasz/xmlnyugtavalasz.xsd">
+    <sikeres>true</sikeres>
+    <nyugtaPdf>AAAAZg==</nyugtaPdf>
+    <nyugta>
+        <alap>
+            <id>5672080</id>
+            <nyugtaszam>NYGTA-2020-3</nyugtaszam>
+            <tipus>NY</tipus>
+            <stornozott>false</stornozott>
+            <kelt>2020-12-14</kelt>
+            <fizmod>Bankkártya</fizmod>
+            <penznem>Ft</penznem>
+            <teszt>true</teszt>
+        </alap>
+        <tetelek>
+            <tetel>
+                <megnevezes>First item</megnevezes>
+                <mennyiseg>2</mennyiseg>
+                <mennyisegiEgyseg>qt</mennyisegiEgyseg>
+                <nettoEgysegar>100.55</nettoEgysegar>
+                <netto>201</netto>
+                <afakulcs>27</afakulcs>
+                <afa>54</afa>
+                <brutto>255</brutto>
+            </tetel>
+            <tetel>
+                <megnevezes>Second item</megnevezes>
+                <mennyiseg>5</mennyiseg>
+                <mennyisegiEgyseg>qt</mennyisegiEgyseg>
+                <nettoEgysegar>1000</nettoEgysegar>
+                <netto>5000</netto>
+                <afakulcs>27</afakulcs>
+                <afa>1350</afa>
+                <brutto>6350</brutto>
+            </tetel>
+        </tetelek>
+        <osszegek>
+            <afakulcsossz>
+            <afakulcs>27</afakulcs>
+            <netto>5201</netto>
+            <afa>1404</afa>
+            <brutto>6605</brutto>
+            </afakulcsossz>
+            <totalossz>
+                <netto>5201</netto>
+                <afa>1404</afa>
+                <brutto>6605</brutto>
+            </totalossz>
+        </osszegek>
+    </nyugta>
+</xmlnyugtavalasz>

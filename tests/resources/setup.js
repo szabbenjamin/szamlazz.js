@@ -114,3 +114,46 @@ exports.createInvoice = function (Szamlazz, seller, buyer, items) {
     items
   })
 }
+
+/**
+ * Create receipt
+ * Buyer and seller can be shared between invoices.
+ * @return {Receipt}
+ */
+exports.createReceipt = function (Szamlazz, items) {
+  return new Szamlazz.Receipt({
+    paymentMethod: Szamlazz.PaymentMethod.CreditCard,
+    currency: Szamlazz.Currency.Ft,
+    receiptNumberPrefix: 'NYGTA',
+    items
+  })
+}
+
+/**
+ * Create sold item with net price
+ * @return {ReceiptItem}
+ */
+exports.createSoldReceiptItemNet = function (Szamlazz) {
+  return new Szamlazz.ReceiptItem({
+    label: 'First item',
+    quantity: 2,
+    unit: 'qt',
+    vat: 27, // can be a number or a special string
+    netUnitPrice: 100.55, // calculates gross and net values from per item net
+    comment: 'An item'
+  })
+}
+
+/**
+ * Create sold item with gross price
+ * @return {ReceiptItem}
+ */
+exports.createSoldReceiptItemGross = function (Szamlazz) {
+  return new Szamlazz.ReceiptItem({
+    label: 'Second item',
+    quantity: 5,
+    unit: 'qt',
+    vat: 27,
+    grossUnitPrice: 1270 // calculates net and total values from per item gross
+  })
+}

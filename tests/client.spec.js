@@ -20,6 +20,9 @@ let buyer
 let soldItem1
 let soldItem2
 let invoice
+let receipt
+let soldReceiptItem1
+let soldReceiptItem2
 
 let Szamlazz
 
@@ -31,7 +34,7 @@ beforeEach(function (done) {
   })
 
   requestStub = sinon.stub()
-  mockery.registerMock('axios', { post: requestStub })
+  mockery.registerMock('axios', { post: requestStub }) // Disable this line to start a real api call
 
   Szamlazz = require('..')
   client = setup.createClient(Szamlazz)
@@ -41,6 +44,9 @@ beforeEach(function (done) {
   soldItem1 = setup.createSoldItemNet(Szamlazz)
   soldItem2 = setup.createSoldItemGross(Szamlazz)
   invoice = setup.createInvoice(Szamlazz, seller, buyer, [soldItem1, soldItem2])
+  soldReceiptItem1 = setup.createSoldReceiptItemNet(Szamlazz)
+  soldReceiptItem2 = setup.createSoldReceiptItemGross(Szamlazz)
+  receipt = setup.createReceipt(Szamlazz, [soldReceiptItem1, soldReceiptItem2])
 
   done()
 })
@@ -69,11 +75,24 @@ describe('Client', function () {
   })
 
   describe('_generateInvoiceXML', function () {
-    it('should return valid XML', function (done) {
+    it('should return valid invoice XML', function (done) {
       fs.readFile(path.join(__dirname, 'resources', 'xmlszamla.xsd'), function (err, data) {
         if (!err) {
           let xsd = xmljs.parseXmlString(data)
           let xml = xmljs.parseXmlString(client._generateInvoiceXML(invoice))
+          expect(xml.validate(xsd)).to.be.true
+          done()
+        }
+      })
+    })
+  })
+
+  describe('_generateReceiptXML', function () {
+    it('should return valid receipt XML', function (done) {
+      fs.readFile(path.join(__dirname, 'resources', 'xmlnyugtacreate.xsd'), function (err, data) {
+        if (!err) {
+          let xsd = xmljs.parseXmlString(data)
+          let xml = xmljs.parseXmlString(client._generateReceiptXML(receipt))
           expect(xml.validate(xsd)).to.be.true
           done()
         }
@@ -169,7 +188,7 @@ describe('Client', function () {
 
       describe('successful invoice generation without PDF download request', function () {
         beforeEach(function (done) {
-          fs.readFile(path.join(__dirname, 'resources', 'success_without_pdf.xml'), function (e, data) {
+          fs.readFile(path.join(__dirname, 'resources', 'issue_invoice_success_without_pdf.xml'), function (e, data) {
             requestStub.resolves({
               status: 200,
               headers: responseHeaders,
@@ -185,7 +204,7 @@ describe('Client', function () {
         it('should have result parameter', function () {
           // requestStub.resolves(data)
           return client.issueInvoice(invoice).then((result) => {
-            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal')
+            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
           })
         })
 
@@ -212,7 +231,7 @@ describe('Client', function () {
 
       describe('successful invoice generation with PDF download request', function () {
         beforeEach(function (done) {
-          fs.readFile(path.join(__dirname, 'resources', 'success_with_pdf.xml'), function (e, data) {
+          fs.readFile(path.join(__dirname, 'resources', 'issue_invoice_success_with_pdf.xml'), function (e, data) {
             requestStub.resolves({
               status: 200,
               headers: responseHeaders,
@@ -228,11 +247,6 @@ describe('Client', function () {
         it('should have result parameter', function () {
           return client.issueInvoice(invoice).then((result) => {
             expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
-          })
-        })
-
-        it('should have `pdf` property', function () {
-          return client.issueInvoice(invoice).then((result) => {
             expect(result.pdf).to.be.an.instanceof(Buffer)
           })
         })
@@ -259,9 +273,9 @@ describe('Client', function () {
         })
 
         it('should have result parameter', function () {
-          // requestStub.resolves(data)
           return client.issueInvoice(invoice).then((result) => {
-            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal')
+            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
+            expect(result).to.have.property('pdf', undefined)
           })
         })
 
@@ -311,6 +325,73 @@ describe('Client', function () {
           return client.issueInvoice(invoice).then((result) => {
             expect(result.pdf).to.be.an.instanceof(Buffer)
           })
+        })
+      })
+    })
+  })
+
+  describe('Receipt', () => {
+    describe('The XML contains the error codes', () => {
+      const errorXml = fs.readFileSync(path.join(__dirname, 'resources', 'issue_receipt_error.xml')).toString()
+
+      beforeEach(function () {
+        requestStub.resolves({
+          status: 200,
+          headers: {},
+          data: errorXml
+        })
+        client.setResponseVersion(Constants.ResponseVersion.Xml)
+      })
+
+      it.only('should have error parameter', function () {
+        return client.issueReceipt(invoice).catch((err) => {
+          expect(err).to.be.a('error')
+          expect(err).to.have.property('code', '3')
+          expect(err).to.have.property('message', 'Sikertelen bejelentkezés.')
+        })
+      })
+    })
+
+    describe('successful RECEIPT generation without PDF download request', function () {
+      const xml = fs.readFileSync(path.join(__dirname, 'resources', 'issue_receipt_success_without_pdf.xml')).toString()
+
+      beforeEach(function () {
+        requestStub.resolves({
+          status: 200,
+          headers: {},
+          data: xml
+        })
+        tokenClient.setRequestInvoiceDownload(false)
+      })
+
+      it('should have result parameter', function () {
+        return tokenClient.issueReceipt(receipt).then((result) => {
+          expect(result).to.have.all.keys('receiptId', 'netTotal', 'grossTotal', 'pdf')
+          expect(result).to.have.property('receiptId', 'NYGTA-2020-3')
+          expect(result).to.have.property('netTotal', '5201')
+          expect(result).to.have.property('grossTotal', '6605')
+        })
+      })
+    })
+    describe('successful RECEIPT generation with PDF download request', function () {
+      const xml = fs.readFileSync(path.join(__dirname, 'resources', 'issue_receipt_success_with_pdf.xml')).toString()
+
+      beforeEach(function () {
+        requestStub.resolves({
+          status: 200,
+          headers: {},
+          data: xml
+        })
+        tokenClient.setRequestInvoiceDownload(true)
+      })
+
+      it('should have result parameter', function () {
+        return tokenClient.issueReceipt(receipt).then((result) => {
+          expect(result).to.have.all.keys('receiptId', 'netTotal', 'grossTotal', 'pdf')
+          expect(result).to.have.property('receiptId', 'NYGTA-2020-3')
+          expect(result).to.have.property('netTotal', '5201')
+          expect(result).to.have.property('grossTotal', '6605')
+          expect(result.pdf).to.be.an.instanceof(Buffer)
         })
       })
     })

@@ -20,7 +20,7 @@ const defaultOptions = {
   vatValue: 0
 }
 
-class Item {
+class ReceiptItem {
   constructor(options) {
     this._options = merge.recursive(true, defaultOptions, options || {})
   }
@@ -34,6 +34,7 @@ class Item {
 
     assert(currency instanceof Constants.Interface.Currency, 'Valid Currency field missing')
 
+    // TODO: extract this logic becase it is the same as the one in the Item class
     if (typeof this._options.vat === 'number') {
       if (this._options.netUnitPrice) {
         this._options.netValue = round(this._options.netUnitPrice * this._options.quantity, currency.roundPriceExp)
@@ -45,7 +46,7 @@ class Item {
         this._options.netValue = this._options.grossValue - this._options.vatValue
         this._options.netUnitPrice = round(this._options.netValue / this._options.quantity, 2)
       } else {
-        throw new Error('Net or Gross Value is required for Item price calculation')
+        throw new Error('Net or Gross Value is required for ReceiptItem price calculation')
       }
     } else if (typeof this._options.vat === 'string') {
       if (['TAM', 'AAM', 'EU', 'EUK', 'MAA', 'ÁKK'].includes(this._options.vat)) {
@@ -59,7 +60,7 @@ class Item {
           this._options.netValue = this._options.grossValue - this._options.vatValue
           this._options.netUnitPrice = round(this._options.netValue / this._options.quantity, 2)
         } else {
-          throw new Error('Net or Gross Value is required for Item price calculation')
+          throw new Error('Net or Gross Value is required for ReceiptItem price calculation')
         }
       }
     }
@@ -74,13 +75,14 @@ class Item {
         ['mennyisegiEgyseg', this._options.unit],
         ['nettoEgysegar', this._options.netUnitPrice],
         ['afakulcs', this._options.vat],
-        ['nettoErtek', this._options.netValue],
-        ['afaErtek', this._options.vatValue],
-        ['bruttoErtek', this._options.grossValue],
-        ['megjegyzes', this._options.comment]
+        ['netto', this._options.netValue],
+        ['afa', this._options.vatValue],
+        ['brutto', this._options.grossValue],
+        ['azonosito', this._options.receiptId]
+        // TODO: [ 'fokonyv', this._options.ledger ]
       ],
       indentLevel
     )
   }
 }
-module.exports = Item
+module.exports = ReceiptItem
