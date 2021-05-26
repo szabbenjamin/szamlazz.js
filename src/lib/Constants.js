@@ -91,7 +91,8 @@ exports.setup = function (_module) {
     Cash: new PaymentMethod('Készpénz', 'cash'),
     BankTransfer: new PaymentMethod('Átutalás', 'bank transfer'),
     CreditCard: new PaymentMethod('Bankkártya', 'credit card'),
-    PayPal: new PaymentMethod('PayPal', 'PayPal')
+    PayPal: new PaymentMethod('PayPal', 'PayPal'),
+    Stripe: new PaymentMethod('Stripe', 'Stripe')
   }
 
   _module.ResponseVersion = {

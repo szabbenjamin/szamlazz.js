@@ -201,6 +201,7 @@ szamlazz.PaymentMethod.Cash
 szamlazz.PaymentMethod.BankTransfer
 szamlazz.PaymentMethod.CreditCard
 szamlazz.PaymentMethod.PayPal
+szamlazz.PaymentMethod.Stripe
 ```
 
 ### Currency

@@ -343,8 +343,8 @@ describe('Client', function () {
         client.setResponseVersion(Constants.ResponseVersion.Xml)
       })
 
-      it.only('should have error parameter', function () {
-        return client.issueReceipt(invoice).catch((err) => {
+      it('should have error parameter', function () {
+        return client.issueReceipt(receipt).catch((err) => {
           expect(err).to.be.a('error')
           expect(err).to.have.property('code', '3')
           expect(err).to.have.property('message', 'Sikertelen bejelentkezés.')
