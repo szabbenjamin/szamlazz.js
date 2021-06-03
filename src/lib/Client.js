@@ -34,7 +34,6 @@ class Client {
     }
   }
 
-  // TODO: test this
   getInvoiceData(options) {
     const hasinvoiceId = typeof options.invoiceId === 'string' && options.invoiceId.trim().length > 1
     const hasOrderNumber = typeof options.orderNumber === 'string' && options.orderNumber.trim().length > 1
@@ -56,7 +55,7 @@ class Client {
       fileFieldName: 'action-szamla_agent_xml',
       xml,
       rootElementName: 'szamla',
-      pdfInResponse: false,
+      pdfInResponse: options.pdf,
       xmlResponse: true // Allways
     })
   }
@@ -111,6 +110,34 @@ class Client {
       grossTotal: headers.szlahu_bruttovegosszeg,
       pdf
     }))
+  }
+
+  getReceiptData(options) {
+    const hasReceiptId = typeof options.receiptId === 'string' && options.receiptId.trim().length > 1
+    assert.ok(hasReceiptId, 'ReceiptId must be specified')
+
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n\
+        <xmlnyugtaget xmlns="http://www.szamlazz.hu/xmlnyugtaget" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/xmlnyugtaget http://www.szamlazz.hu/docs/xsds/agentpdf/xmlnyugtaget.xsd">\n' +
+      XMLUtils.wrapWithElement('beallitasok', [...this._getAuthFields(), ['pdfLetoltes', options.pdf]], 1) +
+      XMLUtils.wrapWithElement(
+        'fejlec',
+        [
+          ['nyugtaszam', options.receiptId]
+          // pdfSablon ???
+        ],
+        1
+      ) +
+      '</xmlnyugtaget>'
+
+    return _sendRequest({
+      client: this,
+      fileFieldName: 'action-szamla_agent_nyugta_get',
+      xml,
+      rootElementName: 'xmlnyugtavalasz',
+      pdfInResponse: options.pdf || false,
+      xmlResponse: true // Allways
+    })
   }
 
   issueReceipt(receipt) {

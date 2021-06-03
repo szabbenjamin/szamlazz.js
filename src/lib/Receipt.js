@@ -59,7 +59,7 @@ class Receipt {
         ['fokonyvVevo', this._options.ledgerId],
         ['devizabank', this._options.exchangeBank],
         ['devizaarf', this._options.exchangeRate],
-        ['devizaarf', this._options.pdfTemplte]
+        ['pdfSablon', this._options.pdfTemplte]
       ],
       indentLevel
     )
