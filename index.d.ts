@@ -183,7 +183,7 @@ declare module 'szamlazz.js' {
 
   // CONSTANTS
   function setup(_module: any): any
-  declare namespace Interface {
+  namespace Interface {
     class Currency {
       constructor(value: string, roundPriceExp: number, comment: string)
       value: string
