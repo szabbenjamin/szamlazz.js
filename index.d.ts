@@ -70,23 +70,23 @@ declare module 'szamlazz.js' {
   // BUYER
   interface BuyerOptions {
     name: string
-    country: string
+    country?: string
     zip: string
     city: string
     address: string
-    taxNumber: string
-    postAddress: {
+    taxNumber?: string
+    postAddress?: {
       name: string
       zip: string
       city: string
       address: string
     }
-    issuerName: string
-    identifier: number
-    phone: string
-    comment: string
-    email: string
-    sendEmail: boolean
+    issuerName?: string
+    identifier?: number
+    phone?: string
+    comment?: string
+    email?: string
+    sendEmail?: boolean
   }
   class Buyer {
     constructor(options: BuyerOptions)
@@ -95,16 +95,16 @@ declare module 'szamlazz.js' {
 
   // SELLER
   interface SellerOptions {
-    bank: {
+    bank?: {
       name: string
       accountNumber: string
     }
-    email: {
+    email?: {
       replyToAddress: string
       subject: string
       message: string
     }
-    issuerName: string
+    issuerName?: string
   }
   class Seller {
     constructor(options: SellerOptions)
