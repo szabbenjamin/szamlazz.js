@@ -18,8 +18,8 @@ const defaultOptions = {
 }
 
 class Client {
-  _cookie
   constructor(options) {
+    this.cookie = null
     this._options = merge({}, defaultOptions, options || {})
 
     this._useToken = typeof this._options.authToken === 'string' && this._options.authToken.trim().length > 1
@@ -248,8 +248,8 @@ const _sendRequest = async ({
   formData.append(fileFieldName, xml, options)
 
   const requestHeaders = formData.getHeaders()
-  if (!!client._cookie) {
-    requestHeaders.Cookie = client._cookie
+  if (!!client.cookie) {
+    requestHeaders.Cookie = client.cookie
   }
 
   let responseType = 'text'
@@ -262,7 +262,7 @@ const _sendRequest = async ({
 
   // Store the new cookie for later usage
   if (!!httpResponse.headers['set-cookie']) {
-    client._cookie = httpResponse.headers['set-cookie']
+    client.cookie = httpResponse.headers['set-cookie']
   }
 
   // Check for errors
