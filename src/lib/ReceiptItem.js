@@ -5,6 +5,7 @@ const merge = require('merge')
 const XMLUtils = require('./XMLUtils')
 const Constants = require('./Constants').setup()
 
+// TODO: extract this logic becase it is the same as the one in the Item class
 function round(value, exp) {
   if (exp < 1) {
     return Math.round(value)
@@ -78,7 +79,7 @@ class ReceiptItem {
         ['netto', this._options.netValue],
         ['afa', this._options.vatValue],
         ['brutto', this._options.grossValue],
-        ['azonosito', this._options.receiptId]
+        ['azonosito', this._options.receiptItemId]
         // TODO: [ 'fokonyv', this._options.ledger ]
       ],
       indentLevel

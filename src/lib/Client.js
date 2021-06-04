@@ -14,7 +14,7 @@ const defaultOptions = {
   eInvoice: false,
   requestInvoiceDownload: false,
   downloadedInvoiceCount: 1,
-  responseVersion: Constants.ResponseVersion.PlainTextOrPdf.value
+  responseVersion: Constants.ResponseVersion.PlainTextOrPdf
 }
 
 class Client {
@@ -22,9 +22,9 @@ class Client {
   constructor(options) {
     this._options = merge({}, defaultOptions, options || {})
 
-    this.useToken = typeof this._options.authToken === 'string' && this._options.authToken.trim().length > 1
+    this._useToken = typeof this._options.authToken === 'string' && this._options.authToken.trim().length > 1
 
-    if (!this.useToken) {
+    if (!this._useToken) {
       assert(typeof this._options.user === 'string' && this._options.user.trim().length > 1, 'Valid User field missing form client options')
 
       assert(
@@ -86,7 +86,7 @@ class Client {
       xml,
       rootElementName: 'xmlszamlavalasz',
       pdfInResponse: this._options.requestInvoiceDownload,
-      xmlResponse: this._options.responseVersion === Constants.ResponseVersion.Xml.value
+      xmlResponse: this._options.responseVersion.value === Constants.ResponseVersion.Xml.value
     }).then(({ headers, pdf }) => ({
       invoiceId: headers.szlahu_szamlaszam,
       netTotal: headers.szlahu_nettovegosszeg,
@@ -103,7 +103,7 @@ class Client {
       xml,
       rootElementName: 'xmlszamlavalasz',
       pdfInResponse: this._options.requestInvoiceDownload,
-      xmlResponse: this._options.responseVersion === Constants.ResponseVersion.Xml.value
+      xmlResponse: this._options.responseVersion.value === Constants.ResponseVersion.Xml.value
     }).then(({ headers, pdf }) => ({
       invoiceId: headers.szlahu_szamlaszam,
       netTotal: headers.szlahu_nettovegosszeg,
@@ -135,6 +135,7 @@ class Client {
       fileFieldName: 'action-szamla_agent_nyugta_get',
       xml,
       rootElementName: 'xmlnyugtavalasz',
+      pdfElementName: 'nyugtaPdf',
       pdfInResponse: options.pdf || false,
       xmlResponse: true // Allways
     })
@@ -166,13 +167,13 @@ class Client {
   }
 
   setResponseVersion(responseVersion) {
-    this._options.responseVersion = responseVersion.value
+    this._options.responseVersion = responseVersion
   }
 
   _getAuthFields() {
     let authFields = []
 
-    if (this.useToken) {
+    if (this._useToken) {
       authFields = authFields.concat([['szamlaagentkulcs', this._options.authToken]])
     } else {
       authFields = authFields.concat([
