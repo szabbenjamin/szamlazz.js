@@ -203,7 +203,7 @@ class Client {
           ['kulcstartojelszo', this._options.passphrase],
           ['szamlaLetoltes', this._options.requestInvoiceDownload],
           ['szamlaLetoltesPld', this._options.downloadedInvoiceCount],
-          ['valaszVerzio', this._options.responseVersion]
+          ['valaszVerzio', this._options.responseVersion.value]
         ],
         1
       ) +
