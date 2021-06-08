@@ -24,8 +24,6 @@ class Receipt {
     this._options.comment = options.comment
     this._options.pdfTemplateId = options.pdfTemplateId
     this._options.ledgerId = options.ledgerId
-    this._options.exchangeBank = options.exchangeBank
-    this._options.exchangeRate = options.exchangeRate
     this._options.pdfTemplte = options.pdfTemplte
     this._options.items = options.items
   }

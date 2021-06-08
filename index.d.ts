@@ -164,7 +164,9 @@ declare module 'szamlazz.js' {
     exchangeBank?: string
     comment?: string
     pdfTemplateId?: string
+    pdfTemplte?: string
     ledgerId?: string
+    items: Array<ReceiptItem>
   }
 
   class Receipt {
