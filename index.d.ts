@@ -11,7 +11,7 @@ declare module 'szamlazz.js' {
   }
 
   interface ReceiptResponse {
-    invoiceId: string
+    receiptId: string
     netTotal: number
     grossTotal: number
     pdf: string
