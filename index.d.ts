@@ -7,20 +7,23 @@ declare module 'szamlazz.js' {
     invoiceId: string
     netTotal: number
     grossTotal: number
-    pdf: string
+    pdf: Buffer
+    pdfBase64: string
   }
 
   interface ReceiptResponse {
     receiptId: string
     netTotal: number
     grossTotal: number
-    pdf: string
+    pdf: Buffer
+    pdfBase64: string
   }
 
   interface SendRequestResponse {
     headers: unknown
     data: unknown
-    pdf: string
+    pdf: Buffer
+    pdfBase64: string
   }
 
   interface ClientOptions {

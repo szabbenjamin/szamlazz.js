@@ -204,7 +204,7 @@ describe('Client', function () {
         it('should have result parameter', function () {
           // requestStub.resolves(data)
           return client.issueInvoice(invoice).then((result) => {
-            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
+            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf', 'pdfBase64')
           })
         })
 
@@ -246,8 +246,9 @@ describe('Client', function () {
 
         it('should have result parameter', function () {
           return client.issueInvoice(invoice).then((result) => {
-            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
+            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf', 'pdfBase64')
             expect(result.pdf).to.be.an.instanceof(Buffer)
+            expect(result.pdfBase64).to.be.equal('AAAAZg==')
           })
         })
       })
@@ -274,8 +275,9 @@ describe('Client', function () {
 
         it('should have result parameter', function () {
           return client.issueInvoice(invoice).then((result) => {
-            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
+            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf', 'pdfBase64')
             expect(result).to.have.property('pdf', undefined)
+            expect(result).to.have.property('pdfBase64', undefined)
           })
         })
 
@@ -317,13 +319,14 @@ describe('Client', function () {
 
         it('should have result parameter', function () {
           return client.issueInvoice(invoice).then((result) => {
-            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf')
+            expect(result).to.have.all.keys('invoiceId', 'netTotal', 'grossTotal', 'pdf', 'pdfBase64')
           })
         })
 
         it('should have `pdf` property', function () {
           return client.issueInvoice(invoice).then((result) => {
             expect(result.pdf).to.be.an.instanceof(Buffer)
+            expect(result.pdfBase64).not.to.be.empty
           })
         })
       })
@@ -366,7 +369,7 @@ describe('Client', function () {
 
       it('should have result parameter', function () {
         return tokenClient.issueReceipt(receipt).then((result) => {
-          expect(result).to.have.all.keys('receiptId', 'netTotal', 'grossTotal', 'pdf')
+          expect(result).to.have.all.keys('receiptId', 'netTotal', 'grossTotal', 'pdf', 'pdfBase64')
           expect(result).to.have.property('receiptId', 'NYGTA-2020-3')
           expect(result).to.have.property('netTotal', '5201')
           expect(result).to.have.property('grossTotal', '6605')
@@ -387,11 +390,12 @@ describe('Client', function () {
 
       it('should have result parameter', function () {
         return tokenClient.issueReceipt(receipt).then((result) => {
-          expect(result).to.have.all.keys('receiptId', 'netTotal', 'grossTotal', 'pdf')
+          expect(result).to.have.all.keys('receiptId', 'netTotal', 'grossTotal', 'pdf', 'pdfBase64')
           expect(result).to.have.property('receiptId', 'NYGTA-2020-3')
           expect(result).to.have.property('netTotal', '5201')
           expect(result).to.have.property('grossTotal', '6605')
           expect(result.pdf).to.be.an.instanceof(Buffer)
+          expect(result.pdfBase64).to.be.equal('AAAAZg==')
         })
       })
     })

@@ -87,11 +87,12 @@ class Client {
       rootElementName: 'xmlszamlavalasz',
       pdfInResponse: this._options.requestInvoiceDownload,
       xmlResponse: this._options.responseVersion.value === Constants.ResponseVersion.Xml.value
-    }).then(({ headers, pdf }) => ({
+    }).then(({ headers, pdf, pdfBase64 }) => ({
       invoiceId: headers.szlahu_szamlaszam,
       netTotal: headers.szlahu_nettovegosszeg,
       grossTotal: headers.szlahu_bruttovegosszeg,
-      pdf
+      pdf,
+      pdfBase64
     }))
   }
 
@@ -104,11 +105,12 @@ class Client {
       rootElementName: 'xmlszamlavalasz',
       pdfInResponse: this._options.requestInvoiceDownload,
       xmlResponse: this._options.responseVersion.value === Constants.ResponseVersion.Xml.value
-    }).then(({ headers, pdf }) => ({
+    }).then(({ headers, pdf, pdfBase64 }) => ({
       invoiceId: headers.szlahu_szamlaszam,
       netTotal: headers.szlahu_nettovegosszeg,
       grossTotal: headers.szlahu_bruttovegosszeg,
-      pdf
+      pdf,
+      pdfBase64
     }))
   }
 
@@ -152,12 +154,13 @@ class Client {
       pdfElementName: 'nyugtaPdf',
       pdfInResponse: this._options.requestReceiptDownload,
       xmlResponse: true // Allways
-    }).then(({ data, pdf }) => {
+    }).then(({ data, pdf, pdfBase64 }) => {
       return {
         receiptId: data.alap[0].nyugtaszam[0],
         netTotal: data.osszegek[0].totalossz[0].netto[0],
         grossTotal: data.osszegek[0].totalossz[0].brutto[0],
-        pdf
+        pdf,
+        pdfBase64
       }
     })
   }
@@ -279,6 +282,7 @@ const _sendRequest = async ({
   const headers = httpResponse.headers
   let data = httpResponse.data
   let pdf
+  let pdfBase64
 
   // Process the response
   if (xmlResponse) {
@@ -299,13 +303,15 @@ const _sendRequest = async ({
 
     if (!!pdfElementName && !!parsedXmlResponse[pdfElementName]) {
       pdf = Buffer.from(parsedXmlResponse[pdfElementName][0], 'base64')
+      pdfBase64 = parsedXmlResponse[pdfElementName][0]
     }
   } else if (pdfInResponse) {
     // PLAIN text with PDF
     data = undefined
     pdf = httpResponse.data
+    pdfBase64 = Buffer(pdf).toString('base64')
   }
-  return { headers, data, pdf }
+  return { headers, data, pdf, pdfBase64 }
 }
 
 module.exports = Client
