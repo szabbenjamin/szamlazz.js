@@ -32,7 +32,6 @@ declare module 'szamlazz.js' {
     requestInvoiceDownload?: boolean
     downloadedInvoiceCount?: number
     responseVersion?: Interface.ResponseVersion
-    passphrase?: string
   }
 
   interface GetInvoiceDataOptions {
