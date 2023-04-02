@@ -25,33 +25,38 @@ class Buyer {
   }
 
   _generateXML(indentLevel) {
-    indentLevel = indentLevel || 0
+    indentLevel = indentLevel || 0;
+    
+    const data = [
+      ['nev', this._options.name],
+      ['orszag', this._options.country],
+      ['irsz', this._options.zip],
+      ['telepules', this._options.city],
+      ['cim', this._options.address],
+      ['email', this._options.email],
+      ['sendEmail', this._options.sendEmail],
+      ['adoszam', this._options.taxNumber],
+      ['adoszamEU', this._options.taxNumberEU],
+      ['postazasiNev', this._options.postAddress.name],
+      ['postazasiOrszag', this._options.postAddress.country],
+      ['postazasiIrsz', this._options.postAddress.zip],
+      ['postazasiTelepules', this._options.postAddress.city],
+      ['postazasiCim', this._options.postAddress.address],
+      // TODO: The following feature hasn't implemented yet
+      // ['vevoFokonyv', ],
+      ['azonosito', this._options.identifier],
+      ['alairoNeve', this._options.issuerName],
+      ['telefonszam', this._options.phone],
+      ['megjegyzes', this._options.comment]
+    ];
+    
+    if (this._options.adoalany) {
+      data.push(['adoalany', this._options.adoalany]);
+    }
 
     return XMLUtils.wrapWithElement(
       'vevo',
-      [
-        ['nev', this._options.name],
-        ['orszag', this._options.country],
-        ['irsz', this._options.zip],
-        ['telepules', this._options.city],
-        ['cim', this._options.address],
-        ['email', this._options.email],
-        ['sendEmail', this._options.sendEmail],
-        ['adoszam', this._options.taxNumber],
-        ['adoalany', this._options.adoalany],
-        ['adoszamEU', this._options.taxNumberEU],
-        ['postazasiNev', this._options.postAddress.name],
-        ['postazasiOrszag', this._options.postAddress.country],
-        ['postazasiIrsz', this._options.postAddress.zip],
-        ['postazasiTelepules', this._options.postAddress.city],
-        ['postazasiCim', this._options.postAddress.address],
-        // TODO: The following feature hasn't implemented yet
-        // ['vevoFokonyv', ],
-        ['azonosito', this._options.identifier],
-        ['alairoNeve', this._options.issuerName],
-        ['telefonszam', this._options.phone],
-        ['megjegyzes', this._options.comment]
-      ],
+      data,
       indentLevel
     )
   }
