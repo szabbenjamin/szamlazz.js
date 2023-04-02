@@ -77,7 +77,7 @@ declare module 'szamlazz.js' {
     city: string
     address: string
     taxNumber?: string,
-    adoalany ?: number,
+    adoalany : number,
     postAddress?: {
       name: string
       zip: string

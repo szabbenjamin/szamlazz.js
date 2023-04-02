@@ -35,6 +35,7 @@ class Buyer {
       ['cim', this._options.address],
       ['email', this._options.email],
       ['sendEmail', this._options.sendEmail],
+      ['adoalany', this._options.adoalany],
       ['adoszam', this._options.taxNumber],
       ['adoszamEU', this._options.taxNumberEU],
       ['postazasiNev', this._options.postAddress.name],
@@ -49,10 +50,6 @@ class Buyer {
       ['telefonszam', this._options.phone],
       ['megjegyzes', this._options.comment]
     ];
-    
-    if (this._options.adoalany) {
-      data.push(['adoalany', this._options.adoalany]);
-    }
 
     return XMLUtils.wrapWithElement(
       'vevo',
