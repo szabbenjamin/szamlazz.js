@@ -38,6 +38,7 @@ class Buyer {
         ['email', this._options.email],
         ['sendEmail', this._options.sendEmail],
         ['adoszam', this._options.taxNumber],
+        ['adoalany', this._options.adoalany],
         ['adoszamEU', this._options.taxNumberEU],
         ['postazasiNev', this._options.postAddress.name],
         ['postazasiOrszag', this._options.postAddress.country],
